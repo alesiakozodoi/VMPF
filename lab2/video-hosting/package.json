@@ -1,0 +1,13 @@
+{
+  "name": "video-hosting",
+  "version": "1.0.0",
+  "description": "Лабораторна робота №2 — Відеохостинг на Node.js + Express + React",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.18.2"
+  }
+}

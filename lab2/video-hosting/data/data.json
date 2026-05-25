@@ -1,0 +1,72 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin",
+      "channel": "Admin Channel",
+      "subscribers": [],
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "username": "user1",
+      "password": "user123",
+      "role": "user",
+      "channel": "Cool Videos",
+      "subscribers": [],
+      "createdAt": "2026-01-15T00:00:00.000Z"
+    }
+  ],
+  "videos": [
+    {
+      "id": 1,
+      "title": "Вступ до Node.js",
+      "description": "Базовий курс з Node.js для початківців",
+      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "thumbnail": "https://placehold.co/320x180/3498db/white?text=Node.js",
+      "authorId": 1,
+      "views": 150,
+      "createdAt": "2026-03-01T10:00:00.000Z",
+      "comments": [
+        {
+          "id": 1,
+          "userId": 2,
+          "text": "Дуже корисне відео!",
+          "createdAt": "2026-03-02T12:00:00.000Z"
+        }
+      ],
+      "sharedWith": []
+    },
+    {
+      "id": 2,
+      "title": "React для початківців",
+      "description": "Основи React: компоненти, стан, пропси",
+      "url": "https://www.w3schools.com/html/movie.mp4",
+      "thumbnail": "https://placehold.co/320x180/e74c3c/white?text=React",
+      "authorId": 2,
+      "views": 230,
+      "createdAt": "2026-03-10T14:00:00.000Z",
+      "comments": [],
+      "sharedWith": []
+    },
+    {
+      "id": 3,
+      "title": "Express.js маршрутизація",
+      "description": "Як працює маршрутизація в Express",
+      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "thumbnail": "https://placehold.co/320x180/27ae60/white?text=Express",
+      "authorId": 1,
+      "views": 95,
+      "createdAt": "2026-04-05T09:00:00.000Z",
+      "comments": [],
+      "sharedWith": []
+    }
+  ],
+  "notifications": [],
+  "nextUserId": 3,
+  "nextVideoId": 4,
+  "nextCommentId": 2,
+  "nextNotificationId": 1
+}

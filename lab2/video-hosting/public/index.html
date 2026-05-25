@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoHub — Відеохостинг</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f0f0; color: #333; }
+
+        /* Navbar */
+        .navbar { background: #1a1a2e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .navbar .brand { color: #e94560; font-size: 1.4em; font-weight: bold; cursor: pointer; }
+        .navbar .nav-links { display: flex; gap: 15px; align-items: center; }
+        .navbar a, .navbar span { color: #eee; text-decoration: none; cursor: pointer; font-size: 14px; }
+        .navbar a:hover { color: #e94560; }
+        .navbar .user-info { color: #aaa; font-size: 13px; }
+        .badge { background: #e94560; color: white; border-radius: 50%; padding: 1px 6px; font-size: 11px; margin-left: 3px; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+        /* Кнопки */
+        .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #e94560; color: white; }
+        .btn-secondary { background: #16213e; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #c0392b; color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* Форми */
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        textarea { resize: vertical; height: 70px; }
+
+        /* Картки відео */
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .video-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; }
+        .video-card:hover { transform: translateY(-3px); }
+        .video-card img { width: 100%; height: 160px; object-fit: cover; }
+        .video-card .info { padding: 12px; }
+        .video-card h3 { font-size: 15px; margin-bottom: 5px; }
+        .video-card p { font-size: 12px; color: #888; }
+
+        /* Сторінка відео */
+        .video-page { display: flex; gap: 25px; flex-wrap: wrap; }
+        .video-main { flex: 2; min-width: 300px; }
+        .video-sidebar { flex: 1; min-width: 250px; }
+        .video-player { width: 100%; border-radius: 10px; background: black; }
+        .video-meta { background: white; padding: 15px; border-radius: 10px; margin-top: 10px; }
+        .video-meta h1 { font-size: 20px; margin-bottom: 8px; }
+        .video-meta .stats { color: #888; font-size: 13px; margin-bottom: 10px; }
+        .video-actions { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+
+        /* Коментарі */
+        .comments { background: white; padding: 15px; border-radius: 10px; margin-top: 15px; }
+        .comment { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .comment:last-child { border-bottom: none; }
+        .comment .author { font-weight: bold; font-size: 13px; color: #1a1a2e; }
+        .comment .text { margin-top: 3px; font-size: 14px; }
+        .comment .date { color: #aaa; font-size: 11px; margin-top: 3px; }
+
+        /* Авторизація */
+        .auth-page { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .auth-page h2 { margin-bottom: 20px; text-align: center; }
+        .auth-toggle { text-align: center; margin-top: 15px; font-size: 13px; }
+        .auth-toggle a { color: #e94560; cursor: pointer; }
+
+        /* Канали */
+        .channel-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .channel-info h3 { font-size: 16px; }
+        .channel-info p { font-size: 13px; color: #888; }
+
+        /* Сповіщення */
+        .notification { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .notification.unread { border-left: 3px solid #e94560; }
+        .notification .msg { font-size: 14px; flex: 1; }
+        .notification .time { font-size: 11px; color: #aaa; margin-left: 10px; }
+
+        /* Адмін */
+        .admin-table { width: 100%; background: white; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+        .admin-table th, .admin-table td { padding: 10px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .admin-table th { background: #1a1a2e; color: white; }
+
+        .page-title { margin-bottom: 20px; }
+        .error-msg { color: #c0392b; font-size: 13px; margin-bottom: 10px; }
+        .success-msg { color: #27ae60; font-size: 13px; margin-bottom: 10px; }
+        .share-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .share-modal-content { background: white; padding: 25px; border-radius: 10px; width: 350px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // ============================================================
+        // API-функції
+        // ============================================================
+        const api = {
+            headers(userId) {
+                const h = { 'Content-Type': 'application/json' };
+                if (userId) h['X-User-Id'] = String(userId);
+                return h;
+            },
+            async get(url, userId) {
+                const res = await fetch(url, { headers: this.headers(userId) });
+                return res.json();
+            },
+            async post(url, body, userId) {
+                const res = await fetch(url, { method: 'POST', headers: this.headers(userId), body: JSON.stringify(body) });
+                return res.json();
+            },
+            async put(url, body, userId) {
+                const res = await fetch(url, { method: 'PUT', headers: this.headers(userId), body: JSON.stringify(body) });
+                return res.json();
+            },
+            async del(url, userId) {
+                const res = await fetch(url, { method: 'DELETE', headers: this.headers(userId) });
+                return res.json();
+            },
+        };
+
+        // ============================================================
+        // Компонент навігації
+        // ============================================================
+        function Navbar({ user, onNavigate, page, notifCount }) {
+            return (
+                <nav className="navbar">
+                    <span className="brand" onClick={() => onNavigate('home')}>🎬 VideoHub</span>
+                    <div className="nav-links">
+                        <a onClick={() => onNavigate('home')}>Головна</a>
+                        <a onClick={() => onNavigate('channels')}>Канали</a>
+                        {user && <a onClick={() => onNavigate('upload')}>Завантажити</a>}
+                        {user && <a onClick={() => onNavigate('shared')}>Поділене</a>}
+                        {user && (
+                            <a onClick={() => onNavigate('notifications')}>
+                                Сповіщення {notifCount > 0 && <span className="badge">{notifCount}</span>}
+                            </a>
+                        )}
+                        {user && user.role === 'admin' && <a onClick={() => onNavigate('admin')}>Адмін</a>}
+                        {user ? (
+                            <span className="user-info">
+                                👤 {user.username} ({user.role})
+                                {' '}<a onClick={() => onNavigate('logout')} style={{color:'#e94560'}}>Вийти</a>
+                            </span>
+                        ) : (
+                            <a onClick={() => onNavigate('login')}>Увійти</a>
+                        )}
+                    </div>
+                </nav>
+            );
+        }
+
+        // ============================================================
+        // Рівень 1: Список відео (Головна)
+        // ============================================================
+        function HomePage({ onSelectVideo }) {
+            const [videos, setVideos] = useState([]);
+
+            useEffect(() => {
+                api.get('/api/videos').then(setVideos);
+            }, []);
+
+            return (
+                <div className="container">
+                    <h1 className="page-title">Усі відео</h1>
+                    <div className="video-grid">
+                        {videos.map(v => (
+                            <div className="video-card" key={v.id} onClick={() => onSelectVideo(v.id)}>
+                                <img src={v.thumbnail} alt={v.title} />
+                                <div className="info">
+                                    <h3>{v.title}</h3>
+                                    <p>{v.channelName} • {v.views} переглядів</p>
+                                    <p>{v.commentCount} коментарів</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Рівень 1 + 2: Сторінка відео (перегляд, коментарі, поділитися)
+        // ============================================================
+        function VideoPage({ videoId, user, onNavigate }) {
+            const [video, setVideo] = useState(null);
+            const [commentText, setCommentText] = useState('');
+            const [showShare, setShowShare] = useState(false);
+            const [users, setUsers] = useState([]);
+            const [shareTarget, setShareTarget] = useState('');
+            const [shareMsg, setShareMsg] = useState('');
+            const [subscribed, setSubscribed] = useState(false);
+
+            const loadVideo = useCallback(() => {
+                api.get('/api/videos/' + videoId, user?.id).then(data => {
+                    if (!data.error) setVideo(data);
+                });
+            }, [videoId, user]);
+
+            useEffect(() => { loadVideo(); }, [loadVideo]);
+
+            // Рівень 2: Додати коментар
+            async function handleComment() {
+                if (!commentText.trim() || !user) return;
+                await api.post('/api/videos/' + videoId + '/comments', { text: commentText }, user.id);
+                setCommentText('');
+                loadVideo();
+            }
+
+            // Рівень 3: Поділитися
+            async function handleShare() {
+                if (!shareTarget) return;
+                const result = await api.post('/api/videos/' + videoId + '/share', { targetUserId: parseInt(shareTarget) }, user.id);
+                setShareMsg(result.message || result.error);
+                setTimeout(() => { setShowShare(false); setShareMsg(''); }, 2000);
+            }
+
+            async function openShareModal() {
+                const allUsers = await api.get('/api/users', user.id);
+                setUsers(allUsers.filter(u => u.id !== user.id));
+                setShowShare(true);
+            }
+
+            // Рівень 4: Підписка
+            async function handleSubscribe() {
+                if (!user || !video) return;
+                const result = await api.post('/api/channels/' + video.authorId + '/subscribe', {}, user.id);
+                setSubscribed(result.subscribed);
+                loadVideo();
+            }
+
+            // Рівень 3: Видалення
+            async function handleDelete() {
+                if (!window.confirm('Видалити це відео?')) return;
+                await api.del('/api/videos/' + videoId, user.id);
+                onNavigate('home');
+            }
+
+            if (!video) return <div className="container"><p>Завантаження...</p></div>;
+
+            const canDelete = user && (user.id === video.authorId || user.role === 'admin');
+
+            return (
+                <div className="container">
+                    <div className="video-page">
+                        <div className="video-main">
+                            <video className="video-player" controls autoPlay>
+                                <source src={video.url} type="video/mp4" />
+                            </video>
+
+                            <div className="video-meta">
+                                <h1>{video.title}</h1>
+                                <div className="stats">
+                                    {video.views} переглядів • {new Date(video.createdAt).toLocaleDateString('uk')}
+                                </div>
+                                <p>{video.description}</p>
+                                <p style={{marginTop:'8px',fontWeight:'bold'}}>
+                                    📺 {video.channelName} ({video.subscriberCount} підписників)
+                                </p>
+
+                                <div className="video-actions">
+                                    {user && user.id !== video.authorId && (
+                                        <button className="btn btn-primary btn-sm" onClick={handleSubscribe}>
+                                            {subscribed ? '✓ Підписано' : '+ Підписатися'}
+                                        </button>
+                                    )}
+                                    {user && (
+                                        <button className="btn btn-secondary btn-sm" onClick={openShareModal}>
+                                            📤 Поділитися
+                                        </button>
+                                    )}
+                                    {canDelete && (
+                                        <button className="btn btn-danger btn-sm" onClick={handleDelete}>
+                                            🗑 Видалити
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Рівень 2: Коментарі */}
+                            <div className="comments">
+                                <h3>Коментарі ({video.comments.length})</h3>
+                                {user && (
+                                    <div style={{margin:'10px 0', display:'flex', gap:'8px'}}>
+                                        <input
+                                            type="text"
+                                            placeholder="Напишіть коментар..."
+                                            value={commentText}
+                                            onChange={e => setCommentText(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handleComment()}
+                                            style={{flex:1}}
+                                        />
+                                        <button className="btn btn-primary btn-sm" onClick={handleComment}>Надіслати</button>
+                                    </div>
+                                )}
+                                {!user && <p style={{fontSize:'13px',color:'#888',margin:'10px 0'}}>Увійдіть, щоб коментувати</p>}
+                                {video.comments.map(c => (
+                                    <div className="comment" key={c.id}>
+                                        <span className="author">{c.username}</span>
+                                        <div className="text">{c.text}</div>
+                                        <div className="date">{new Date(c.createdAt).toLocaleString('uk')}</div>
+                                    </div>
+                                ))}
+                                {video.comments.length === 0 && <p style={{color:'#aaa',marginTop:'10px'}}>Коментарів ще немає</p>}
+                            </div>
+                        </div>
+
+                        <div className="video-sidebar">
+                            <h3 style={{marginBottom:'10px'}}>Рекомендовані</h3>
+                            <SidebarVideos currentId={videoId} onSelect={id => onNavigate('video', id)} />
+                        </div>
+                    </div>
+
+                    {/* Рівень 3: Модальне вікно "Поділитися" */}
+                    {showShare && (
+                        <div className="share-modal" onClick={() => setShowShare(false)}>
+                            <div className="share-modal-content" onClick={e => e.stopPropagation()}>
+                                <h3>Поділитися відео</h3>
+                                {shareMsg && <p className="success-msg">{shareMsg}</p>}
+                                <div className="form-group" style={{marginTop:'10px'}}>
+                                    <label>Оберіть користувача:</label>
+                                    <select value={shareTarget} onChange={e => setShareTarget(e.target.value)}>
+                                        <option value="">-- Оберіть --</option>
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.id}>{u.username}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{display:'flex', gap:'8px'}}>
+                                    <button className="btn btn-primary" onClick={handleShare}>Надіслати</button>
+                                    <button className="btn btn-secondary" onClick={() => setShowShare(false)}>Закрити</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function SidebarVideos({ currentId, onSelect }) {
+            const [videos, setVideos] = useState([]);
+            useEffect(() => { api.get('/api/videos').then(v => setVideos(v.filter(x => x.id !== currentId))); }, [currentId]);
+            return videos.map(v => (
+                <div className="video-card" key={v.id} onClick={() => onSelect(v.id)} style={{marginBottom:'10px'}}>
+                    <img src={v.thumbnail} alt={v.title} />
+                    <div className="info"><h3>{v.title}</h3><p>{v.views} переглядів</p></div>
+                </div>
+            ));
+        }
+
+        // ============================================================
+        // Рівень 2: Завантаження відео
+        // ============================================================
+        function UploadPage({ user, onNavigate }) {
+            const [form, setForm] = useState({ title: '', description: '', url: '', thumbnail: '' });
+            const [msg, setMsg] = useState('');
+
+            async function handleSubmit(e) {
+                e.preventDefault();
+                const result = await api.post('/api/videos', form, user.id);
+                if (result.error) {
+                    setMsg(result.error);
+                } else {
+                    setMsg('Відео успішно завантажено!');
+                    setTimeout(() => onNavigate('home'), 1500);
+                }
+            }
+
+            return (
+                <div className="container">
+                    <div style={{maxWidth:'500px',margin:'0 auto',background:'white',padding:'25px',borderRadius:'10px'}}>
+                        <h2>Завантажити відео</h2>
+                        {msg && <p className={msg.includes('успішно') ? 'success-msg' : 'error-msg'}>{msg}</p>}
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Назва *</label>
+                                <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Опис</label>
+                                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+                            </div>
+                            <div className="form-group">
+                                <label>URL відео *</label>
+                                <input value={form.url} onChange={e => setForm({...form, url: e.target.value})} placeholder="https://..." required />
+                            </div>
+                            <div className="form-group">
+                                <label>URL обкладинки</label>
+                                <input value={form.thumbnail} onChange={e => setForm({...form, thumbnail: e.target.value})} placeholder="https://..." />
+                            </div>
+                            <button className="btn btn-primary" type="submit">Завантажити</button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Рівень 3: Авторизація
+        // ============================================================
+        function AuthPage({ onLogin }) {
+            const [isRegister, setIsRegister] = useState(false);
+            const [form, setForm] = useState({ username: '', password: '', channel: '' });
+            const [error, setError] = useState('');
+
+            async function handleSubmit(e) {
+                e.preventDefault();
+                setError('');
+                const url = isRegister ? '/api/users/register' : '/api/users/login';
+                const result = await api.post(url, form);
+                if (result.error) {
+                    setError(result.error);
+                } else {
+                    onLogin(result);
+                }
+            }
+
+            return (
+                <div className="auth-page">
+                    <h2>{isRegister ? 'Реєстрація' : 'Вхід'}</h2>
+                    {error && <p className="error-msg">{error}</p>}
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label>Логін</label>
+                            <input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Пароль</label>
+                            <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+                        </div>
+                        {isRegister && (
+                            <div className="form-group">
+                                <label>Назва каналу</label>
+                                <input value={form.channel} onChange={e => setForm({...form, channel: e.target.value})} />
+                            </div>
+                        )}
+                        <button className="btn btn-primary" type="submit" style={{width:'100%'}}>
+                            {isRegister ? 'Зареєструватися' : 'Увійти'}
+                        </button>
+                    </form>
+                    <div className="auth-toggle">
+                        {isRegister ? 'Вже є акаунт? ' : 'Немає акаунту? '}
+                        <a onClick={() => { setIsRegister(!isRegister); setError(''); }}>
+                            {isRegister ? 'Увійти' : 'Зареєструватися'}
+                        </a>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Рівень 4: Канали та підписки
+        // ============================================================
+        function ChannelsPage({ user }) {
+            const [channels, setChannels] = useState([]);
+            useEffect(() => { api.get('/api/channels').then(setChannels); }, []);
+
+            async function handleSubscribe(userId) {
+                if (!user) return alert('Увійдіть для підписки');
+                await api.post('/api/channels/' + userId + '/subscribe', {}, user.id);
+                api.get('/api/channels').then(setChannels);
+            }
+
+            return (
+                <div className="container">
+                    <h1 className="page-title">Канали</h1>
+                    {channels.map(ch => (
+                        <div className="channel-card" key={ch.userId}>
+                            <div className="channel-info">
+                                <h3>📺 {ch.channel}</h3>
+                                <p>@{ch.username} • {ch.subscriberCount} підписників • {ch.videoCount} відео</p>
+                            </div>
+                            {user && user.id !== ch.userId && (
+                                <button className="btn btn-primary btn-sm" onClick={() => handleSubscribe(ch.userId)}>
+                                    Підписатися
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Рівень 3: Поділене зі мною
+        // ============================================================
+        function SharedPage({ user, onSelectVideo }) {
+            const [videos, setVideos] = useState([]);
+            useEffect(() => { api.get('/api/shared', user.id).then(setVideos); }, []);
+
+            return (
+                <div className="container">
+                    <h1 className="page-title">Поділене зі мною</h1>
+                    {videos.length === 0 && <p style={{color:'#888'}}>Поки ніхто не поділився з вами відео.</p>}
+                    <div className="video-grid">
+                        {videos.map(v => (
+                            <div className="video-card" key={v.id} onClick={() => onSelectVideo(v.id)}>
+                                <img src={v.thumbnail} alt={v.title} />
+                                <div className="info"><h3>{v.title}</h3><p>Від: {v.authorName}</p></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Рівень 4: Сповіщення
+        // ============================================================
+        function NotificationsPage({ user }) {
+            const [notifs, setNotifs] = useState([]);
+            useEffect(() => { api.get('/api/notifications', user.id).then(setNotifs); }, []);
+
+            async function markRead(id) {
+                await api.put('/api/notifications/' + id + '/read', {}, user.id);
+                api.get('/api/notifications', user.id).then(setNotifs);
+            }
+
+            return (
+                <div className="container">
+                    <h1 className="page-title">Сповіщення</h1>
+                    {notifs.length === 0 && <p style={{color:'#888'}}>Сповіщень немає.</p>}
+                    {notifs.map(n => (
+                        <div className={'notification' + (n.read ? '' : ' unread')} key={n.id}>
+                            <span className="msg">{n.message}</span>
+                            <span className="time">{new Date(n.createdAt).toLocaleString('uk')}</span>
+                            {!n.read && <button className="btn btn-sm btn-secondary" onClick={() => markRead(n.id)} style={{marginLeft:'8px'}}>✓</button>}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Рівень 3: Адмін-панель (управління правами)
+        // ============================================================
+        function AdminPage({ user }) {
+            const [users, setUsers] = useState([]);
+            useEffect(() => { api.get('/api/users', user.id).then(setUsers); }, []);
+
+            async function changeRole(userId, newRole) {
+                await api.put('/api/users/' + userId + '/role', { role: newRole }, user.id);
+                api.get('/api/users', user.id).then(setUsers);
+            }
+
+            return (
+                <div className="container">
+                    <h1 className="page-title">Адмін-панель — Управління користувачами</h1>
+                    <table className="admin-table">
+                        <thead>
+                            <tr><th>ID</th><th>Логін</th><th>Канал</th><th>Роль</th><th>Підписники</th><th>Дії</th></tr>
+                        </thead>
+                        <tbody>
+                            {users.map(u => (
+                                <tr key={u.id}>
+                                    <td>{u.id}</td>
+                                    <td>{u.username}</td>
+                                    <td>{u.channel}</td>
+                                    <td>{u.role}</td>
+                                    <td>{u.subscriberCount}</td>
+                                    <td>
+                                        {u.id !== user.id && (
+                                            <select
+                                                value={u.role}
+                                                onChange={e => changeRole(u.id, e.target.value)}
+                                                style={{width:'auto',padding:'4px'}}
+                                            >
+                                                <option value="user">user</option>
+                                                <option value="admin">admin</option>
+                                            </select>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // Головний компонент (SPA-роутинг)
+        // ============================================================
+        function App() {
+            const [page, setPage] = useState('home');
+            const [user, setUser] = useState(null);
+            const [videoId, setVideoId] = useState(null);
+            const [notifCount, setNotifCount] = useState(0);
+
+            // Рівень 4: перевірка сповіщень
+            useEffect(() => {
+                if (!user) return;
+                const check = () => {
+                    api.get('/api/notifications', user.id).then(data => {
+                        if (Array.isArray(data)) setNotifCount(data.filter(n => !n.read).length);
+                    });
+                };
+                check();
+                const interval = setInterval(check, 10000);
+                return () => clearInterval(interval);
+            }, [user]);
+
+            function navigate(p, id) {
+                if (p === 'logout') { setUser(null); setPage('home'); return; }
+                if (p === 'video') { setVideoId(id); setPage('video'); return; }
+                setPage(p);
+            }
+
+            function handleSelectVideo(id) { setVideoId(id); setPage('video'); }
+
+            let content;
+            switch (page) {
+                case 'home': content = <HomePage onSelectVideo={handleSelectVideo} />; break;
+                case 'video': content = <VideoPage videoId={videoId} user={user} onNavigate={navigate} />; break;
+                case 'upload': content = user ? <UploadPage user={user} onNavigate={navigate} /> : <AuthPage onLogin={u => { setUser(u); setPage('home'); }} />; break;
+                case 'channels': content = <ChannelsPage user={user} />; break;
+                case 'shared': content = user ? <SharedPage user={user} onSelectVideo={handleSelectVideo} /> : <AuthPage onLogin={u => { setUser(u); setPage('shared'); }} />; break;
+                case 'notifications': content = user ? <NotificationsPage user={user} /> : <AuthPage onLogin={u => { setUser(u); setPage('notifications'); }} />; break;
+                case 'admin': content = user?.role === 'admin' ? <AdminPage user={user} /> : <HomePage onSelectVideo={handleSelectVideo} />; break;
+                case 'login': content = <AuthPage onLogin={u => { setUser(u); setPage('home'); }} />; break;
+                default: content = <HomePage onSelectVideo={handleSelectVideo} />;
+            }
+
+            return (
+                <div>
+                    <Navbar user={user} onNavigate={navigate} page={page} notifCount={notifCount} />
+                    {content}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
