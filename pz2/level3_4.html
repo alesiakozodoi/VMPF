@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рівень 3+4 — Інтерактивна карта подій</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+
+        .navbar {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .app-container {
+            display: flex;
+            height: calc(100vh - 54px);
+        }
+
+        .sidebar {
+            width: 380px;
+            background: #fff;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar-section h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .map-container { flex: 1; }
+        #map { width: 100%; height: 100%; }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        textarea { resize: vertical; height: 60px; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 2px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-add { background: #27ae60; color: white; width: 100%; }
+        .btn-delete { background: #e74c3c; color: white; font-size: 12px; padding: 4px 10px; }
+        .btn-detail { background: #3498db; color: white; font-size: 12px; padding: 4px 10px; }
+
+        .event-card {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        .event-card h4 { margin-bottom: 4px; color: #2c3e50; }
+        .event-card p { font-size: 13px; color: #666; margin-bottom: 4px; }
+        .event-card .event-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            color: white;
+            font-weight: bold;
+        }
+        .event-actions { margin-top: 6px; }
+        .event-count { color: #888; font-size: 13px; }
+
+        /* Рівень 4: Детальна сторінка */
+        .detail-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .detail-card h2 { margin-bottom: 15px; color: #2c3e50; }
+        .detail-card p { margin-bottom: 8px; color: #555; }
+        .detail-card .close-btn {
+            background: #95a5a6;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .filter-row { display: flex; gap: 8px; }
+        .filter-row > * { flex: 1; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel для JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Типи подій з кольорами для маркерів
+        const EVENT_TYPES = {
+            concert: { label: 'Концерт', color: '#e74c3c' },
+            festival: { label: 'Фестиваль', color: '#f39c12' },
+            exhibition: { label: 'Виставка', color: '#9b59b6' },
+            sport: { label: 'Спорт', color: '#27ae60' },
+            other: { label: 'Інше', color: '#3498db' },
+        };
+
+        // Початкові дані подій (JSON)
+        const INITIAL_EVENTS = [
+            {
+                id: 1,
+                name: 'Концерт "Океан Ельзи"',
+                type: 'concert',
+                description: 'Великий концерт на стадіоні',
+                date: '2026-06-15',
+                lat: 50.4501,
+                lng: 30.5234,
+            },
+            {
+                id: 2,
+                name: 'Atlas Weekend',
+                type: 'festival',
+                description: 'Музичний фестиваль',
+                date: '2026-07-10',
+                lat: 50.4021,
+                lng: 30.6325,
+            },
+            {
+                id: 3,
+                name: 'Виставка сучасного мистецтва',
+                type: 'exhibition',
+                description: 'Мистецькі інсталяції',
+                date: '2026-05-20',
+                lat: 50.4485,
+                lng: 30.5238,
+            },
+        ];
+
+        // Створення кольорового маркера
+        function createIcon(color) {
+            return L.divIcon({
+                className: '',
+                html: '<div style="background:' + color +
+                      ';width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+            });
+        }
+
+        // ---- Головний компонент ----
+        function App() {
+            const [events, setEvents] = useState(INITIAL_EVENTS);
+            const [nextId, setNextId] = useState(4);
+            const [selectedDetail, setSelectedDetail] = useState(null);
+
+            // Форма додавання
+            const [form, setForm] = useState({
+                name: '', type: 'concert', description: '', date: '',
+            });
+
+            // Рівень 4: Фільтри, сортування, пошук
+            const [search, setSearch] = useState('');
+            const [filterType, setFilterType] = useState('');
+            const [sortBy, setSortBy] = useState('date');
+
+            // Карта
+            const mapRef = useRef(null);
+            const mapInstance = useRef(null);
+            const markersRef = useRef([]);
+
+            // Клік по карті для отримання координат
+            const [clickedCoords, setClickedCoords] = useState(null);
+
+            // Ініціалізація карти
+            useEffect(() => {
+                if (!mapInstance.current) {
+                    mapInstance.current = L.map(mapRef.current).setView([50.45, 30.52], 12);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(mapInstance.current);
+
+                    // Клік по карті — зберігаємо координати
+                    mapInstance.current.on('click', function(e) {
+                        setClickedCoords({ lat: e.latlng.lat.toFixed(4), lng: e.latlng.lng.toFixed(4) });
+                    });
+                }
+            }, []);
+
+            // Фільтрація, пошук, сортування
+            let filtered = events.filter(e => {
+                const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
+                                    e.description.toLowerCase().includes(search.toLowerCase());
+                const matchType = filterType === '' || e.type === filterType;
+                return matchSearch && matchType;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'date') return a.date.localeCompare(b.date);
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'type') return a.type.localeCompare(b.type);
+                return 0;
+            });
+
+            // Оновлення маркерів на карті
+            useEffect(() => {
+                if (!mapInstance.current) return;
+
+                // Видаляємо старі маркери
+                markersRef.current.forEach(m => m.remove());
+                markersRef.current = [];
+
+                // Додаємо нові
+                filtered.forEach(event => {
+                    const icon = createIcon(EVENT_TYPES[event.type].color);
+                    const marker = L.marker([event.lat, event.lng], { icon })
+                        .addTo(mapInstance.current)
+                        .bindPopup('<b>' + event.name + '</b><br>' +
+                                   EVENT_TYPES[event.type].label + '<br>' + event.date);
+                    markersRef.current.push(marker);
+                });
+            }, [filtered]);
+
+            // Додавання події
+            function handleAdd() {
+                if (!form.name || !form.date || !clickedCoords) {
+                    alert('Заповніть усі поля та клікніть на карту для вибору місця!');
+                    return;
+                }
+                const newEvent = {
+                    id: nextId,
+                    name: form.name,
+                    type: form.type,
+                    description: form.description,
+                    date: form.date,
+                    lat: parseFloat(clickedCoords.lat),
+                    lng: parseFloat(clickedCoords.lng),
+                };
+                setEvents([...events, newEvent]);
+                setNextId(nextId + 1);
+                setForm({ name: '', type: 'concert', description: '', date: '' });
+                setClickedCoords(null);
+            }
+
+            // Видалення події
+            function handleDelete(id) {
+                setEvents(events.filter(e => e.id !== id));
+            }
+
+            return (
+                <div>
+                    <div className="navbar">🗺️ Інтерактивна карта подій</div>
+                    <div className="app-container">
+                        <div className="sidebar">
+
+                            {/* Додавання події */}
+                            <div className="sidebar-section">
+                                <h3>➕ Додати подію</h3>
+                                <input
+                                    type="text"
+                                    placeholder="Назва події"
+                                    value={form.name}
+                                    onChange={e => setForm({...form, name: e.target.value})}
+                                />
+                                <select
+                                    value={form.type}
+                                    onChange={e => setForm({...form, type: e.target.value})}
+                                >
+                                    {Object.entries(EVENT_TYPES).map(([key, val]) => (
+                                        <option key={key} value={key}>{val.label}</option>
+                                    ))}
+                                </select>
+                                <textarea
+                                    placeholder="Опис"
+                                    value={form.description}
+                                    onChange={e => setForm({...form, description: e.target.value})}
+                                />
+                                <input
+                                    type="date"
+                                    value={form.date}
+                                    onChange={e => setForm({...form, date: e.target.value})}
+                                />
+                                <p style={{fontSize: '12px', color: '#888'}}>
+                                    📍 Координати: {clickedCoords
+                                        ? clickedCoords.lat + ', ' + clickedCoords.lng
+                                        : 'клікніть на карту'}
+                                </p>
+                                <button className="btn btn-add" onClick={handleAdd}>
+                                    Додати на карту
+                                </button>
+                            </div>
+
+                            {/* Рівень 4: Фільтри */}
+                            <div className="sidebar-section">
+                                <h3>🔍 Пошук та фільтри</h3>
+                                <input
+                                    type="text"
+                                    placeholder="Пошук за назвою або описом..."
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
+                                <div className="filter-row">
+                                    <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+                                        <option value="">Усі типи</option>
+                                        {Object.entries(EVENT_TYPES).map(([key, val]) => (
+                                            <option key={key} value={key}>{val.label}</option>
+                                        ))}
+                                    </select>
+                                    <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                        <option value="date">За датою</option>
+                                        <option value="name">За назвою</option>
+                                        <option value="type">За типом</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Список подій */}
+                            <div className="sidebar-section">
+                                <h3>📋 Події <span className="event-count">({filtered.length})</span></h3>
+                                {filtered.map(event => (
+                                    <div className="event-card" key={event.id}>
+                                        <h4>{event.name}</h4>
+                                        <span
+                                            className="event-type"
+                                            style={{background: EVENT_TYPES[event.type].color}}
+                                        >
+                                            {EVENT_TYPES[event.type].label}
+                                        </span>
+                                        <p>📅 {event.date}</p>
+                                        <p>{event.description}</p>
+                                        <div className="event-actions">
+                                            <button
+                                                className="btn btn-detail"
+                                                onClick={() => setSelectedDetail(event)}
+                                            >
+                                                Деталі
+                                            </button>
+                                            <button
+                                                className="btn btn-delete"
+                                                onClick={() => handleDelete(event.id)}
+                                            >
+                                                Видалити
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {filtered.length === 0 && (
+                                    <p style={{color: '#999', textAlign: 'center'}}>Подій не знайдено</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Карта */}
+                        <div className="map-container">
+                            <div id="map" ref={mapRef}></div>
+                        </div>
+                    </div>
+
+                    {/* Рівень 4: Детальна сторінка (модальне вікно) */}
+                    {selectedDetail && (
+                        <div className="detail-overlay" onClick={() => setSelectedDetail(null)}>
+                            <div className="detail-card" onClick={e => e.stopPropagation()}>
+                                <h2>{selectedDetail.name}</h2>
+                                <p><strong>Тип:</strong> {EVENT_TYPES[selectedDetail.type].label}</p>
+                                <p><strong>Дата:</strong> {selectedDetail.date}</p>
+                                <p><strong>Опис:</strong> {selectedDetail.description || 'Без опису'}</p>
+                                <p><strong>Координати:</strong> {selectedDetail.lat}, {selectedDetail.lng}</p>
+                                <button className="close-btn" onClick={() => setSelectedDetail(null)}>
+                                    Закрити
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рівень 1 — Зміна кольору тексту</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        h1 { color: #333; }
+        #colorBtn {
+            padding: 15px 40px;
+            font-size: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #fff;
+            transition: all 0.3s;
+        }
+        #colorBtn:hover { transform: scale(1.05); }
+        #info {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Рівень 1: Зміна кольору тексту</h1>
+    <button id="colorBtn">Завантаження...</button>
+    <p id="info"></p>
+
+    <script>
+        // Завантажуємо JSON-файл із кольором за допомогою fetch
+        fetch('data/color.json')
+            .then(response => response.json())
+            .then(data => {
+                // Розбираємо JSON та застосовуємо колір
+                const parsed = JSON.parse(JSON.stringify(data));
+
+                const btn = document.getElementById('colorBtn');
+                const info = document.getElementById('info');
+
+                // Змінюємо колір тексту кнопки
+                btn.style.color = parsed.color;
+                btn.textContent = parsed.label;
+
+                info.textContent = parsed.description + ' (колір: ' + parsed.color + ')';
+            })
+            .catch(error => {
+                console.log('Помилка завантаження JSON:', error);
+                document.getElementById('info').textContent =
+                    'Помилка: запустіть через локальний сервер (Live Server або python3 -m http.server)';
+            })
+            .finally(() => {
+                console.log('Запит завершено');
+            });
+    </script>
+</body>
+</html>
