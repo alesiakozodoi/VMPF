@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="24dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Завантажити відео" android:textSize="22sp" android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+    <EditText android:id="@+id/etUploadTitle"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="Назва відео" android:inputType="text"/>
+    <EditText android:id="@+id/etUploadDescription"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="Опис" android:inputType="textMultiLine" android:minLines="3"
+        android:layout_marginTop="8dp"/>
+    <EditText android:id="@+id/etUploadUrl"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="URL відео" android:inputType="textUri" android:layout_marginTop="8dp"/>
+    <Button android:id="@+id/btnUpload"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Завантажити" android:backgroundTint="#27AE60" android:layout_marginTop="16dp"/>
+    <Button android:id="@+id/btnUploadBack"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Назад" android:backgroundTint="#95A5A6" android:layout_marginTop="8dp"/>
+</LinearLayout>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="16dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Сповіщення" android:textSize="22sp" android:textStyle="bold"
+        android:layout_marginBottom="12dp"/>
+    <TextView android:id="@+id/tvNoNotifications"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Сповіщень немає" android:textColor="#888" android:visibility="gone"
+        android:gravity="center" android:layout_marginTop="40dp"/>
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvNotifications"
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1"/>
+    <Button android:id="@+id/btnNotifBack"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Назад" android:backgroundTint="#95A5A6"/>
+</LinearLayout>
