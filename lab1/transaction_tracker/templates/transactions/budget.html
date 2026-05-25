@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Бюджет{% endblock %}
+
+{% block content %}
+<h1>Бюджет</h1>
+
+<div class="budget-summary">
+    <div class="budget-card income">
+        <h3>Загальні доходи</h3>
+        <p>+{{ total_income }} грн</p>
+    </div>
+    <div class="budget-card expense">
+        <h3>Загальні витрати</h3>
+        <p>-{{ total_expense }} грн</p>
+    </div>
+    <div class="budget-card balance {% if balance >= 0 %}positive{% else %}negative{% endif %}">
+        <h3>Баланс</h3>
+        <p>{{ balance }} грн</p>
+    </div>
+</div>
+
+<h2>Бюджет за категоріями</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Категорія</th>
+            <th>Доходи</th>
+            <th>Витрати</th>
+            <th>Баланс</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in budget_data %}
+        <tr>
+            <td>{{ item.category.name }}</td>
+            <td class="text-green">+{{ item.income }} грн</td>
+            <td class="text-red">-{{ item.expense }} грн</td>
+            <td class="{% if item.balance >= 0 %}text-green{% else %}text-red{% endif %}">
+                {{ item.balance }} грн
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" style="text-align:center;">Додайте категорії та транзакції для перегляду бюджету.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

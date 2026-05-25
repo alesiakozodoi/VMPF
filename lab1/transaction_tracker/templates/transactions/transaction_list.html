@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Транзакції{% endblock %}
+
+{% block content %}
+<h1>Транзакції</h1>
+
+<!-- Рівень 4: Блок бюджету -->
+<div class="budget-summary">
+    <div class="budget-card income">
+        <h3>Доходи</h3>
+        <p>+{{ total_income }} грн</p>
+    </div>
+    <div class="budget-card expense">
+        <h3>Витрати</h3>
+        <p>-{{ total_expense }} грн</p>
+    </div>
+    <div class="budget-card balance {% if balance >= 0 %}positive{% else %}negative{% endif %}">
+        <h3>Баланс</h3>
+        <p>{{ balance }} грн</p>
+    </div>
+</div>
+
+<!-- Рівень 3: Фільтрація та пошук -->
+<div class="filter-section">
+    <h2>Фільтри</h2>
+    <form method="get" class="filter-form">
+        <div class="filter-row">
+            <div class="filter-field">
+                <label>Пошук:</label>
+                {{ filter_form.search }}
+            </div>
+            <div class="filter-field">
+                <label>Категорія:</label>
+                {{ filter_form.category }}
+            </div>
+            <div class="filter-field">
+                <label>Тип:</label>
+                {{ filter_form.transaction_type }}
+            </div>
+            <div class="filter-field">
+                <label>Сортування:</label>
+                {{ filter_form.sort_by }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Застосувати</button>
+        <a href="{% url 'transaction_list' %}" class="btn btn-secondary">Скинути</a>
+    </form>
+</div>
+
+<a href="{% url 'transaction_create' %}" class="btn btn-primary">+ Додати транзакцію</a>
+
+<!-- Рівень 1: Таблиця транзакцій -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Опис</th>
+            <th>Сума</th>
+            <th>Тип</th>
+            <th>Категорія</th>
+            <th>Дата</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in transactions %}
+        <tr>
+            <td>{{ t.description }}</td>
+            <td class="{% if t.transaction_type == 'debit' %}text-green{% else %}text-red{% endif %}">
+                {% if t.transaction_type == 'debit' %}+{% else %}-{% endif %}{{ t.amount }} грн
+            </td>
+            <td>{{ t.get_transaction_type_display }}</td>
+            <td>
+                {% if t.category %}
+                    <a href="{% url 'category_transactions' t.category.pk %}">{{ t.category }}</a>
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+            <td>{{ t.created_at|date:"d.m.Y H:i" }}</td>
+            <td>
+                <form method="post" action="{% url 'transaction_delete' t.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Видалити?')">✕</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="text-align:center;">Транзакцій поки немає.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

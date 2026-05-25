@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Трекер транзакцій{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'transaction_list' %}" class="nav-brand">💰 Трекер транзакцій</a>
+            <div class="nav-links">
+                <a href="{% url 'transaction_list' %}">Транзакції</a>
+                <a href="{% url 'category_list' %}">Категорії</a>
+                <a href="{% url 'budget' %}">Бюджет</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

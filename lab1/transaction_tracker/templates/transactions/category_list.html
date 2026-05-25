@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Категорії{% endblock %}
+
+{% block content %}
+<h1>Категорії</h1>
+
+<a href="{% url 'category_create' %}" class="btn btn-primary">+ Додати категорію</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Кількість транзакцій</th>
+            <th>Доходи</th>
+            <th>Витрати</th>
+            <th>Баланс</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in category_data %}
+        <tr>
+            <td><a href="{% url 'category_transactions' item.category.pk %}">{{ item.category.name }}</a></td>
+            <td>{{ item.count }}</td>
+            <td class="text-green">+{{ item.income }} грн</td>
+            <td class="text-red">-{{ item.expense }} грн</td>
+            <td class="{% if item.balance >= 0 %}text-green{% else %}text-red{% endif %}">{{ item.balance }} грн</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="text-align:center;">Категорій поки немає.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
